@@ -32,10 +32,22 @@ export default function App() {
       const { data } = await supabase.from('game_sessions').select('*').eq('id', roomId).single();
       if (data) setGameState(data);
     };
-    fetchNow();
+    // Realtime channel
     const channel = supabase.channel(`room_${roomId}`)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'game_sessions', filter: `id=eq.${roomId}` }, 
-      (payload) => setGameState(payload.new))
+      (payload) => {
+        if (payload.eventType === 'DELETE') {
+          // Partner menghapus room / menekan tombol exit
+          setAppState('welcome');
+          setRoomId('');
+          setRole(null);
+          setGameState(null);
+          setNotification("MISSION ABORTED: PARTNER EXITED");
+          setTimeout(() => setNotification(null), 3000);
+        } else {
+          setGameState(payload.new);
+        }
+      })
       .subscribe();
 
     // Polling khusus untuk Lobby agar partner cepat terdeteksi
