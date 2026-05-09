@@ -2,20 +2,34 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <link rel="icon" type="image/png" href="/icon-512.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <meta name="theme-color" content="#0a0a0c" />
-    <meta name="description" content="Code & Cure: A cooperative survival game for couples." />
+    <title>THE LIFE VESSEL</title>
     
-    <!-- Open Graph -->
-    <meta property="og:title" content="Code & Cure" />
-    <meta property="og:description" content="Survive together, even when apart." />
-    <meta property="og:type" content="website" />
-    
-    <title>Code & Cure // Co-op Survival</title>
+    <!-- PWA Tags -->
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="theme-color" content="#22d3ee" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <link rel="apple-touch-icon" href="/icon-512.png" />
+
+    <style>
+      body { margin: 0; background: #0a0a0a; overscroll-behavior: none; }
+    </style>
   </head>
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js').then(reg => {
+            console.log('SW Registered!', reg);
+          }).catch(err => {
+            console.log('SW Registration Failed:', err);
+          });
+        });
+      }
+    </script>
   </body>
 </html>

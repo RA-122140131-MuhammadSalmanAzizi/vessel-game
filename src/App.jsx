@@ -65,9 +65,8 @@ export default function App() {
     hasSavedScore.current = true;
     
     try {
-      // Try using room_id as Integer first, most common in DB
       const { error } = await supabase.from('highscores').insert([
-        { room_id: parseInt(roomId), score: parseInt(finalScore) }
+        { room_id: String(roomId), score: parseInt(finalScore) }
       ]);
       
       if (error) {
@@ -102,6 +101,7 @@ export default function App() {
   // --- Game Over Auto-Save ---
   useEffect(() => {
     if (appState === 'playing' && currentHealth <= 0) {
+      setAppState('gameover'); // Tambahkan baris ini agar state berubah
       saveFinalScore(score);
     }
   }, [currentHealth, appState, score]);
@@ -173,17 +173,19 @@ export default function App() {
   }, [appState, role]);
 
   const completeTask = (reward, taskId) => {
-    updateGameDB({ base_health: Math.min(currentHealth + reward, 100) });
-    setScore(s => s + 100);
-    setNotification(`STABILITY RESTORED: +${reward}%`);
-    setActiveTask(null);
-    const pool = role === 'Engineer' ? ENGINEER_POOL : PHARMACIST_POOL;
-    const remainingInPool = pool.filter(t => !activeTaskPool.includes(t));
-    if (remainingInPool.length > 0) {
-      const newTask = remainingInPool[Math.floor(Math.random() * remainingInPool.length)];
-      setActiveTaskPool(prev => prev.map(t => t === taskId ? newTask : t));
-    }
-    setTimeout(() => setNotification(null), 2000);
+    setTimeout(() => {
+      updateGameDB({ base_health: Math.min(currentHealth + reward, 100) });
+      setScore(s => s + 100);
+      setNotification(`STABILITY RESTORED: +${reward}%`);
+      setActiveTask(null);
+      const pool = role === 'Engineer' ? ENGINEER_POOL : PHARMACIST_POOL;
+      const remainingInPool = pool.filter(t => !activeTaskPool.includes(t));
+      if (remainingInPool.length > 0) {
+        const newTask = remainingInPool[Math.floor(Math.random() * remainingInPool.length)];
+        setActiveTaskPool(prev => prev.map(t => t === taskId ? newTask : t));
+      }
+      setTimeout(() => setNotification(null), 2000);
+    }, 0); // Jeda 0ms ini akan mengamankan siklus render React
   };
 
   const fetchLeaderboard = async () => {
@@ -230,7 +232,7 @@ export default function App() {
         {appState === 'role-select' && <RoleSelectScreen gameState={gameState} roomId={roomId} onCopy={copyRoomId} onSelect={async (r) => { await updateGameDB({ [r === 'Engineer' ? 'engineer_taken' : 'pharmacist_taken']: true }); setRole(r); setAppState('lobby'); }} />}
         {appState === 'lobby' && <LobbyScreen roomId={roomId} role={role} partnerIn={role === 'Engineer' ? gameState?.pharmacist_taken : gameState?.engineer_taken} countdown={countdown} onCopy={copyRoomId} />}
         {appState === 'playing' && <GamePlayScreen role={role} health={currentHealth} time={currentTime} score={score} afk={partnerAfk} tasks={activeTaskPool} onTaskSelect={setActiveTask} activeTask={activeTask} onComplete={completeTask} onCloseTask={() => setActiveTask(null)} updateDB={updateGameDB} />}
-        {(currentHealth <= 0 && appState === 'playing') && <GameOverScreen score={score} onExit={exitGame} />}
+        {appState === 'gameover' && <GameOverScreen score={score} onExit={exitGame} />}
         {appState === 'win' && <WinScreen score={score} onExit={exitGame} />}
       </AnimatePresence>
 
@@ -259,18 +261,25 @@ export default function App() {
 // --- Screens ---
 function WelcomeScreen({ onCreate, onJoin, leaderboard }) {
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="relative z-10 flex flex-col items-center justify-center h-full p-8 text-center">
-      <div className="flex flex-col items-center max-w-sm mb-16">
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="relative z-10 flex flex-col md:flex-row items-center justify-center h-full p-8 text-center md:text-left gap-12 md:gap-24 w-full max-w-5xl mx-auto">
+      
+      {/* Bagian Kiri: Branding & Tombol */}
+      <div className="flex flex-col items-center md:items-start max-w-sm w-full">
         <h1 className="text-8xl font-black italic mb-2 tracking-tighter text-white leading-none">VESSEL</h1>
         <p className="text-[10px] text-gray-500 font-mono tracking-[0.5em] uppercase mb-12">Core Survival Protocol</p>
-        <div className="flex flex-col gap-4 w-full px-8">
-          <button onClick={onCreate} className="py-6 bg-white text-black font-black rounded-3xl hover:scale-105 transition-all shadow-2xl uppercase tracking-widest text-xs">NEW MISSION</button>
-          <button onClick={onJoin} className="py-6 bg-white/5 border border-white/10 font-black rounded-3xl hover:bg-white/10 transition-all uppercase tracking-widest text-xs">JOIN LINK</button>
+        <div className="flex flex-col gap-4 w-full px-8 md:px-0">
+          <button onClick={onCreate} className="py-6 bg-white text-black font-black rounded-3xl hover:scale-105 transition-all shadow-[0_0_30px_rgba(255,255,255,0.2)] uppercase tracking-widest text-xs">
+            NEW MISSION
+          </button>
+          <button onClick={onJoin} className="py-6 bg-white/5 border border-white/10 font-black rounded-3xl hover:bg-white/10 transition-all uppercase tracking-widest text-xs text-white">
+            JOIN LINK
+          </button>
         </div>
       </div>
 
+      {/* Bagian Kanan: Leaderboard */}
       <div className="w-full max-w-sm bg-white/5 border border-white/10 rounded-[40px] p-10 backdrop-blur-xl">
-        <div className="flex flex-col items-center gap-2 mb-8 text-white">
+        <div className="flex flex-col items-center md:items-start gap-2 mb-8 text-white">
           <TrendingUp size={24} className="text-cyber-accent mb-2" />
           <h2 className="text-xs font-black uppercase tracking-[0.4em] text-white">Top Performers</h2>
         </div>
@@ -284,10 +293,13 @@ function WelcomeScreen({ onCreate, onJoin, leaderboard }) {
               <span className="text-lg font-black italic text-white leading-none">{item.score}</span>
             </div>
           )) : (
-            <div className="py-10 text-center text-gray-600 text-[10px] font-bold uppercase tracking-[0.3em]">No Mission Data</div>
+            <div className="py-10 text-center md:text-left text-gray-600 text-[10px] font-bold uppercase tracking-[0.3em]">
+              No Mission Data
+            </div>
           )}
         </div>
       </div>
+      
     </motion.div>
   );
 }

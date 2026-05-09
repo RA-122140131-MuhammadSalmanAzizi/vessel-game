@@ -1,0 +1,17 @@
+{
+  "name": "The Life Vessel",
+  "short_name": "Vessel",
+  "description": "Cooperative Sci-Fi Survival Game",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0a0a0a",
+  "theme_color": "#22d3ee",
+  "icons": [
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
