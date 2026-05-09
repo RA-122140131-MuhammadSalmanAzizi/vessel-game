@@ -73,12 +73,22 @@ export default function App() {
         console.error("LEADERBOARD SYNC ERROR:", error);
         setNotification("SYNC ERR: " + error.message.substring(0, 20));
         hasSavedScore.current = false; 
+        
+        // Menghilangkan notifikasi error setelah 3 detik
+        setTimeout(() => setNotification(null), 3000); 
       } else {
         setNotification("RECORDS UPDATED!");
         fetchLeaderboard();
+        
+        // Menghilangkan notifikasi sukses setelah 3 detik
+        setTimeout(() => setNotification(null), 3000); 
       }
     } catch (e) {
       console.error("DB EXCEPTION:", e);
+      setNotification("DB ERROR OCCURRED");
+      
+      // Jaga-jaga jika terjadi exception, notifikasi juga tetap hilang
+      setTimeout(() => setNotification(null), 3000);
     }
   };
 
@@ -119,7 +129,7 @@ export default function App() {
       (payload) => {
         if (payload.eventType === 'DELETE') {
           if (appState === 'playing') return; // Don't kick if still playing
-          setAppState('welcome'); setRoomId(''); setRole(null); setGameState(null); setNotification("SESSION CLOSED");
+          setAppState('welcome'); setRoomId(''); setRole(null); setGameState(null); setNotification("SESSION CLOSED"); setTimeout(() => setNotification(null), 3000);
         } else setGameState(payload.new);
       })
       .subscribe();
@@ -306,7 +316,7 @@ function RoleSelectScreen({ gameState, roomId, onSelect, onCopy, onBack }) {
       
       {/* TOMBOL BACK / ABORT */}
       <button onClick={onBack} className="absolute top-6 left-6 md:top-10 md:left-10 flex items-center gap-2 text-[10px] md:text-xs text-gray-500 font-bold uppercase tracking-widest hover:text-white transition-colors">
-        <X size={16} /> ABORT
+        <X size={16} /> Back
       </button>
 
       <div className="mb-8 md:mb-12 mt-4 md:mt-0">
@@ -341,7 +351,42 @@ function RoleCard({ title, icon, taken, onClick }) {
   ); 
 }
 
-function LobbyScreen({ roomId, role, partnerIn, countdown, onCopy }) { return <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="relative z-10 flex flex-col items-center justify-center h-full p-8 text-center"><div className="mb-12"><button onClick={onCopy} className="group flex items-center gap-4 px-8 py-3 bg-white/5 rounded-2xl text-gray-500 font-mono tracking-widest mb-6 border border-white/5 hover:bg-white/10 transition-all"><span className="uppercase text-[10px]">Room ID // </span><span className="text-2xl font-black text-white">{roomId}</span><Copy size={16} className="text-cyber-accent" /></button><h2 className="text-7xl font-black italic uppercase tracking-tighter leading-tight text-white">{role} ACTIVE</h2></div><div className="relative w-80 h-80 flex items-center justify-center border-4 border-white/5 rounded-full shadow-2xl">{partnerIn ? <AnimatePresence mode="wait"><motion.div key={countdown} initial={{ scale: 0.5, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 1.5, opacity: 0 }} className="text-[12rem] font-black italic text-cyber-accent leading-none">{countdown !== null ? (countdown > 0 ? countdown : 'GO') : '...'}</motion.div></AnimatePresence> : <div className="flex flex-col items-center gap-8"><div className="w-16 h-16 border-4 border-white/10 border-t-cyber-accent rounded-full animate-spin" /><p className="text-xs text-white font-black tracking-[0.4em] uppercase">Awaiting Partner</p></div>}</div></motion.div>; }
+function LobbyScreen({ roomId, role, partnerIn, countdown, onCopy }) { 
+  return (
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="relative z-10 flex flex-col items-center justify-center h-full p-6 text-center">
+      <div className="mb-8 md:mb-12">
+        <button onClick={onCopy} className="group flex items-center gap-3 px-6 py-2 md:px-8 md:py-3 bg-white/5 rounded-2xl text-gray-500 font-mono tracking-widest mb-4 md:mb-6 border border-white/5 hover:bg-white/10 transition-all mx-auto">
+          <span className="uppercase text-[8px] md:text-[10px]">Room ID // </span>
+          <span className="text-xl md:text-2xl font-black text-white">{roomId}</span>
+          <Copy size={14} className="text-cyber-accent" />
+        </button>
+        <h2 className="text-4xl md:text-7xl font-black italic uppercase tracking-tighter leading-tight text-white">{role} ACTIVE</h2>
+      </div>
+
+      {/* Lingkaran Countdown yang lebih kecil di Mobile */}
+      <div className="relative w-64 h-64 md:w-80 md:h-80 flex items-center justify-center border-4 border-white/5 rounded-full shadow-2xl overflow-hidden">
+        {partnerIn ? (
+          <AnimatePresence mode="wait">
+            <motion.div 
+              key={countdown} 
+              initial={{ scale: 0.5, opacity: 0 }} 
+              animate={{ scale: 1, opacity: 1 }} 
+              exit={{ scale: 1.5, opacity: 0 }} 
+              className="text-8xl md:text-[12rem] font-black italic text-cyber-accent leading-none"
+            >
+              {countdown !== null ? (countdown > 0 ? countdown : 'GO') : '...'}
+            </motion.div>
+          </AnimatePresence> 
+        ) : (
+          <div className="flex flex-col items-center gap-6 md:gap-8 p-4">
+            <div className="w-12 h-12 md:w-16 md:h-16 border-4 border-white/10 border-t-cyber-accent rounded-full animate-spin" />
+            <p className="text-[10px] md:text-xs text-white font-black tracking-[0.4em] uppercase">Awaiting Partner</p>
+          </div>
+        )}
+      </div>
+    </motion.div>
+  ); 
+}
 
 function GamePlayScreen({ role, health, time, score, afk, tasks, onTaskSelect, activeTask, onComplete, onCloseTask, updateDB }) {
   const isCritical = time >= 90;
