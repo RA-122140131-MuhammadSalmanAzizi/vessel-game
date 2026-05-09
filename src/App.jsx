@@ -73,21 +73,15 @@ export default function App() {
         console.error("LEADERBOARD SYNC ERROR:", error);
         setNotification("SYNC ERR: " + error.message.substring(0, 20));
         hasSavedScore.current = false; 
-        
-        // Menghilangkan notifikasi error setelah 3 detik
         setTimeout(() => setNotification(null), 3000); 
       } else {
         setNotification("RECORDS UPDATED!");
         fetchLeaderboard();
-        
-        // Menghilangkan notifikasi sukses setelah 3 detik
         setTimeout(() => setNotification(null), 3000); 
       }
     } catch (e) {
       console.error("DB EXCEPTION:", e);
       setNotification("DB ERROR OCCURRED");
-      
-      // Jaga-jaga jika terjadi exception, notifikasi juga tetap hilang
       setTimeout(() => setNotification(null), 3000);
     }
   };
@@ -111,7 +105,7 @@ export default function App() {
   // --- Game Over Auto-Save ---
   useEffect(() => {
     if (appState === 'playing' && currentHealth <= 0) {
-      setAppState('gameover'); // Tambahkan baris ini agar state berubah
+      setAppState('gameover');
       saveFinalScore(score);
     }
   }, [currentHealth, appState, score]);
@@ -128,7 +122,7 @@ export default function App() {
       .on('postgres_changes', { event: '*', schema: 'public', table: 'game_sessions', filter: `id=eq.${roomId}` }, 
       (payload) => {
         if (payload.eventType === 'DELETE') {
-          if (appState === 'playing') return; // Don't kick if still playing
+          if (appState === 'playing') return; 
           setAppState('welcome'); setRoomId(''); setRole(null); setGameState(null); setNotification("SESSION CLOSED"); setTimeout(() => setNotification(null), 3000);
         } else setGameState(payload.new);
       })
@@ -195,7 +189,7 @@ export default function App() {
         setActiveTaskPool(prev => prev.map(t => t === taskId ? newTask : t));
       }
       setTimeout(() => setNotification(null), 2000);
-    }, 0); // Jeda 0ms ini akan mengamankan siklus render React
+    }, 0);
   };
 
   const fetchLeaderboard = async () => {
@@ -272,8 +266,6 @@ export default function App() {
 function WelcomeScreen({ onCreate, onJoin, leaderboard }) {
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="relative z-10 flex flex-col md:flex-row items-center justify-center h-full w-full p-6 py-10 md:p-8 text-center md:text-left gap-8 md:gap-24 max-w-5xl mx-auto overflow-y-auto pb-12">
-      
-      {/* Bagian Kiri: Branding & Tombol */}
       <div className="flex flex-col items-center md:items-start max-w-sm w-full mt-auto md:mt-0">
         <h1 className="text-7xl md:text-8xl font-black italic mb-2 tracking-tighter text-white leading-none">VESSEL</h1>
         <p className="text-[9px] md:text-[10px] text-gray-500 font-mono tracking-[0.4em] md:tracking-[0.5em] uppercase mb-10 md:mb-12">Core Survival Protocol</p>
@@ -282,8 +274,6 @@ function WelcomeScreen({ onCreate, onJoin, leaderboard }) {
           <button onClick={onJoin} className="py-5 md:py-6 bg-white/5 border border-white/10 font-black rounded-3xl hover:bg-white/10 transition-all uppercase tracking-widest text-xs text-white">JOIN LINK</button>
         </div>
       </div>
-
-      {/* Bagian Kanan: Leaderboard */}
       <div className="w-full max-w-sm bg-white/5 border border-white/10 rounded-[30px] md:rounded-[40px] p-6 md:p-10 backdrop-blur-xl mb-auto md:mb-0 mt-4 md:mt-0">
         <div className="flex flex-col items-center md:items-start gap-2 mb-6 md:mb-8 text-white">
           <TrendingUp size={20} className="text-cyber-accent mb-1" />
@@ -303,7 +293,6 @@ function WelcomeScreen({ onCreate, onJoin, leaderboard }) {
           )}
         </div>
       </div>
-      
     </motion.div>
   );
 }
@@ -313,12 +302,9 @@ function RoleSelectScreen({ gameState, roomId, onSelect, onCopy, onBack }) {
   const displayId = roomId || gameState?.id || "------"; 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="relative z-10 flex flex-col items-center justify-start md:justify-center h-full w-full p-6 pt-20 md:p-8 text-center overflow-y-auto">
-      
-      {/* TOMBOL BACK / ABORT */}
       <button onClick={onBack} className="absolute top-6 left-6 md:top-10 md:left-10 flex items-center gap-2 text-[10px] md:text-xs text-gray-500 font-bold uppercase tracking-widest hover:text-white transition-colors">
         <X size={16} /> Back
       </button>
-
       <div className="mb-8 md:mb-12 mt-4 md:mt-0">
         <h2 className="text-xl md:text-3xl font-black italic mb-3 md:mb-4 tracking-tighter uppercase opacity-50">Authorized Room</h2>
         <button onClick={onCopy} className="group relative inline-block px-8 py-4 md:px-10 md:py-5 bg-white/5 border-2 border-cyber-accent/30 rounded-3xl shadow-[0_0_30px_rgba(34,211,238,0.1)] hover:bg-white/10 transition-all">
@@ -326,9 +312,7 @@ function RoleSelectScreen({ gameState, roomId, onSelect, onCopy, onBack }) {
           <div className="text-5xl md:text-6xl font-black font-mono tracking-tighter text-white">{displayId}</div>
         </button>
       </div>
-      
       <h3 className="text-2xl md:text-4xl font-black italic mb-6 md:mb-10 tracking-tight text-white">SELECT YOUR UNIT</h3>
-      
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8 w-full max-w-4xl pb-10">
         <RoleCard title="ENGINEER" icon={<Wrench size={30} />} taken={gameState?.engineer_taken} onClick={() => onSelect('Engineer')} />
         <RoleCard title="PHARMACIST" icon={<FlaskConical size={30} />} taken={gameState?.pharmacist_taken} onClick={() => onSelect('Pharmacist')} />
@@ -362,18 +346,10 @@ function LobbyScreen({ roomId, role, partnerIn, countdown, onCopy }) {
         </button>
         <h2 className="text-4xl md:text-7xl font-black italic uppercase tracking-tighter leading-tight text-white">{role} ACTIVE</h2>
       </div>
-
-      {/* Lingkaran Countdown yang lebih kecil di Mobile */}
       <div className="relative w-64 h-64 md:w-80 md:h-80 flex items-center justify-center border-4 border-white/5 rounded-full shadow-2xl overflow-hidden">
         {partnerIn ? (
           <AnimatePresence mode="wait">
-            <motion.div 
-              key={countdown} 
-              initial={{ scale: 0.5, opacity: 0 }} 
-              animate={{ scale: 1, opacity: 1 }} 
-              exit={{ scale: 1.5, opacity: 0 }} 
-              className="text-8xl md:text-[12rem] font-black italic text-cyber-accent leading-none"
-            >
+            <motion.div key={countdown} initial={{ scale: 0.5, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 1.5, opacity: 0 }} className="text-8xl md:text-[12rem] font-black italic text-cyber-accent leading-none">
               {countdown !== null ? (countdown > 0 ? countdown : 'GO') : '...'}
             </motion.div>
           </AnimatePresence> 
@@ -427,7 +403,7 @@ function GridPulseTask({ onComplete }) {
   const [count, setCount] = useState(0);
   useEffect(() => { const it = setInterval(() => { setCells(p => { const n = [...p]; n[Math.floor(Math.random()*16)] = true; return n; }); }, 600); return () => clearInterval(it); }, []);
   const click = (i) => { if(cells[i]) { setCells(p=>{ const n=[...p]; n[i]=false; return n; }); setCount(c => { const next = c + 1; if(next >= 15) onComplete(); return next; }); } };
-  return <div className="w-full text-center"><div className="text-[10px] text-red-500 mb-4 font-black">CLEANING: {count}/15</div><div className="grid grid-cols-4 gap-4">{cells.map((a,i)=><button key={i} onClick={()=>click(i)} className={`w-14 h-14 rounded-2xl border-2 transition-all ${a?'bg-red-500 border-red-400 shadow-[0_0_20px_#ef4444]':'bg-white/5 border-white/5'}`}/>)}</div></div>;
+  return <div className="w-full text-center"><div className="text-[10px] text-red-500 mb-4 font-black tracking-widest uppercase">Cleaning: {count}/15</div><div className="grid grid-cols-4 gap-3 md:gap-4">{cells.map((a,i)=><button key={i} onClick={()=>click(i)} className={`w-10 h-10 md:w-14 md:h-14 rounded-xl md:rounded-2xl border-2 transition-all ${a?'bg-red-500 border-red-400 shadow-[0_0_20px_#ef4444]':'bg-white/5 border-white/5'}`}/>)}</div></div>;
 }
 function CalibrationTask({ onComplete }) {
   const [needle, setNeedle] = useState(0);
@@ -447,7 +423,7 @@ function DatalinkTask({ onComplete }) {
 function DNATask({ onComplete }) {
   const [sequence] = useState(['A', 'T', 'G', 'C'].sort(() => 0.5 - Math.random()));
   const [target] = useState(sequence[Math.floor(Math.random()*4)]);
-  return <div className="w-full text-center text-emerald-500"><p className="text-[10px] mb-8 font-black uppercase">Match Nitrogen Base: {target}</p><div className="grid grid-cols-2 gap-4">{sequence.map(b => <button key={b} onClick={() => { if(b === target) onComplete(); }} className={`py-6 rounded-2xl border-2 font-black text-2xl transition-all ${b === target ? 'border-emerald-500 bg-emerald-500/10' : 'border-white/5 hover:border-white/20'}`}>{b}</button>)}</div></div>;
+  return <div className="w-full text-center text-emerald-500"><p className="text-[10px] mb-8 font-black uppercase tracking-widest">Match Nitrogen Base: {target}</p><div className="grid grid-cols-2 gap-4">{sequence.map(b => <button key={b} onClick={() => { if(b === target) onComplete(); }} className={`py-6 rounded-2xl border-2 font-black text-2xl transition-all ${b === target ? 'border-emerald-500 bg-emerald-500/10' : 'border-white/5 hover:border-white/20'}`}>{b}</button>)}</div></div>;
 }
 function CoolingTask({ onComplete }) {
   const [temp, setTemp] = useState(50);
@@ -463,7 +439,7 @@ function ScannerTask({ onComplete }) {
   
   useEffect(() => {
     const dist = Math.sqrt(Math.pow(lensPos.x - targetPos.x, 2) + Math.pow(lensPos.y - targetPos.y, 2));
-    setIsDetected(dist < 15); // Hitbox more generous
+    setIsDetected(dist < 15);
   }, [lensPos, targetPos]);
 
   return (
@@ -479,7 +455,7 @@ function ScannerTask({ onComplete }) {
 function EncryptionTask({ onComplete }) {
   const [code] = useState(Math.random().toString(2).slice(2, 6));
   const [inp, setInp] = useState('');
-  return <div className="w-full text-center text-violet-400"><p className="text-[10px] mb-6 font-black uppercase">Binary Sequence: {code}</p><div className="flex gap-4 justify-center mb-10">{code.split('').map((c, i) => <div key={i} className={`w-10 h-10 border-2 rounded-xl flex items-center justify-center font-black ${inp[i] ? 'border-violet-500 bg-violet-500/20' : 'border-white/10'}`}>{inp[i]}</div>)}</div><div className="grid grid-cols-2 gap-4"><button onClick={() => { const next = inp + '0'; setInp(next); if(next === code) onComplete(); if(!code.startsWith(next)) setInp(''); }} className="py-6 bg-violet-600 text-white font-black rounded-2xl text-2xl">0</button><button onClick={() => { const next = inp + '1'; setInp(next); if(next === code) onComplete(); if(!code.startsWith(next)) setInp(''); }} className="py-6 bg-violet-600 text-white font-black rounded-2xl text-2xl">1</button></div></div>;
+  return <div className="w-full text-center text-violet-400"><p className="text-[10px] mb-6 font-black uppercase tracking-widest">Binary Sequence: {code}</p><div className="flex gap-4 justify-center mb-10">{code.split('').map((c, i) => <div key={i} className={`w-10 h-10 border-2 rounded-xl flex items-center justify-center font-black ${inp[i] ? 'border-violet-500 bg-violet-500/20' : 'border-white/10'}`}>{inp[i]}</div>)}</div><div className="grid grid-cols-2 gap-4"><button onClick={() => { const next = inp + '0'; setInp(next); if(next === code) onComplete(); if(!code.startsWith(next)) setInp(''); }} className="py-6 bg-violet-600 text-white font-black rounded-2xl text-2xl">0</button><button onClick={() => { const next = inp + '1'; setInp(next); if(next === code) onComplete(); if(!code.startsWith(next)) setInp(''); }} className="py-6 bg-violet-600 text-white font-black rounded-2xl text-2xl">1</button></div></div>;
 }
 function SweepTask({ onComplete }) {
   const [trash, setTrash] = useState([...Array(6)].map((_, i) => ({ id: i, x: Math.random()*70+5, y: Math.random()*70+5 })));
@@ -488,31 +464,32 @@ function SweepTask({ onComplete }) {
 }
 
 function TaskModal({ task, onComplete, onClose, role, updateDB }) {
-  const colors = { grid: 'border-red-500 text-red-500', chem: 'border-pharmacist text-pharmacist', reactor: 'border-engineer text-engineer', gencode: 'border-engineer text-engineer', terminal: 'border-pharmacist text-pharmacist', sweep: 'border-emerald-500 text-emerald-500', sort: 'border-cyan-500 text-cyan-500', vent: 'border-white text-white', calibration: 'border-orange-500 text-orange-500', datalink: 'border-purple-500 text-purple-500', dna: 'border-emerald-400 text-emerald-400', cooling: 'border-blue-400 text-blue-400', scanner: 'border-red-400 text-red-400', encryption: 'border-violet-500 text-violet-500' };
+  const colors = { grid: 'border-red-500', reactor: 'border-engineer', chem: 'border-pharmacist', terminal: 'border-pharmacist', sweep: 'border-emerald-500', dna: 'border-emerald-400', calibration: 'border-orange-500', cooling: 'border-blue-400', scanner: 'border-red-400', wires: 'border-engineer', battery: 'border-engineer', datalink: 'border-engineer', encryption: 'border-engineer', sort: 'border-pharmacist', vent: 'border-pharmacist' };
   return (
     <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/95 backdrop-blur-3xl">
-      <div className={`w-full max-sm:max-w-[95%] max-w-sm rounded-[45px] p-12 relative border-2 bg-white/[0.02] ${colors[task] || 'border-white/10'}`}>
-        <button onClick={onClose} className="absolute top-10 right-10 opacity-20 hover:opacity-100 transition-opacity"><X size={28}/></button>
-        <h2 className="text-3xl font-black mb-10 italic uppercase tracking-tighter text-white">{task.replace('_', ' ')}</h2>
-        <div className="min-h-[250px] flex items-center justify-center bg-white/5 rounded-[40px] p-8 border border-white/5">
+      <div className={`w-full max-w-sm rounded-[30px] md:rounded-[45px] p-6 md:p-12 relative border-2 bg-white/[0.02] shadow-2xl ${colors[task] || 'border-white/10'}`}>
+        <button onClick={onClose} className="absolute top-6 right-6 md:top-10 md:right-10 opacity-30 hover:opacity-100 transition-opacity"><X size={24} /></button>
+        <h2 className="text-xl md:text-3xl font-black mb-6 md:mb-10 italic uppercase tracking-tighter text-white">{task.replace('_', ' ')}</h2>
+        <div className="min-h-[200px] md:min-h-[250px] flex items-center justify-center bg-white/5 rounded-[25px] md:rounded-[40px] p-4 md:p-8 border border-white/5">
           {task === 'grid' && <GridPulseTask onComplete={() => onComplete(10)} />}
           {task === 'chem' && <ChemistryTask onComplete={() => onComplete(12)} />}
           {task === 'reactor' && <ReactorTask onComplete={() => onComplete(15)} />}
           {task === 'gencode' && <GenCodeTask onComplete={() => onComplete(8)} updateDB={updateDB} />}
           {task === 'terminal' && <TerminalTask onComplete={() => onComplete(15)} />}
           {task === 'sweep' && <SweepTask onComplete={() => onComplete(12)} />}
-          {task === 'wires' && <WiresTask onComplete={() => onComplete(10)} />}
-          {task === 'battery' && <BatteryTask onComplete={() => onComplete(8)} />}
-          {task === 'sort' && <SortTask onComplete={() => onComplete(12)} />}
-          {task === 'vent' && <VentTask onComplete={() => onComplete(10)} />}
-          {task === 'calibration' && <CalibrationTask onComplete={() => onComplete(12)} />}
-          {task === 'datalink' && <DatalinkTask onComplete={() => onComplete(15)} />}
           {task === 'dna' && <DNATask onComplete={() => onComplete(12)} />}
           {task === 'cooling' && <CoolingTask onComplete={() => onComplete(15)} />}
+          {task === 'calibration' && <CalibrationTask onComplete={() => onComplete(12)} />}
           {task === 'scanner' && <ScannerTask onComplete={() => onComplete(12)} />}
+          {task === 'wires' && <WiresTask onComplete={() => onComplete(10)} />}
+          {task === 'battery' && <BatteryTask onComplete={() => onComplete(10)} />}
+          {task === 'datalink' && <DatalinkTask onComplete={() => onComplete(15)} />}
           {task === 'encryption' && <EncryptionTask onComplete={() => onComplete(15)} />}
-          {!['grid', 'chem', 'reactor', 'gencode', 'terminal', 'sweep', 'wires', 'battery', 'sort', 'vent', 'calibration', 'datalink', 'dna', 'cooling', 'scanner', 'encryption'].includes(task) && (<div className="text-center"><p className="text-[10px] text-gray-500 mb-6 uppercase tracking-widest">Protocol Sync</p><button onClick={() => onComplete(8)} className="py-4 px-10 bg-white/10 rounded-2xl font-black text-white">ESTABLISH</button></div>)}
+          {task === 'sort' && <SortTask onComplete={() => onComplete(12)} />}
+          {task === 'vent' && <VentTask onComplete={() => onComplete(10)} />}
+          {!['grid', 'chem', 'reactor', 'gencode', 'terminal', 'sweep', 'dna', 'cooling', 'calibration', 'scanner', 'wires', 'battery', 'datalink', 'encryption', 'sort', 'vent'].includes(task) && (<div className="text-center"><p className="text-[10px] text-gray-500 mb-6 uppercase tracking-widest">Protocol Sync</p><button onClick={() => onComplete(8)} className="py-4 px-10 bg-white/10 rounded-2xl font-black text-white">ESTABLISH</button></div>)}
         </div>
+        <p className="mt-6 text-[8px] text-center uppercase tracking-[0.3em] opacity-30 font-bold">Manual Override Required</p>
       </div>
     </div>
   );
@@ -522,8 +499,28 @@ function TaskModal({ task, onComplete, onClose, role, updateDB }) {
 function getTaskIcon(task) { const icons = { grid: <Grid3X3 size={18}/>, gencode: <Key size={18}/>, reactor: <RefreshCw size={18}/>, wires: <Zap size={18}/>, battery: <Battery size={18}/>, calibration: <Cpu size={18}/>, datalink: <Database size={18}/>, encryption: <Layers size={18}/>, chem: <Beaker size={18}/>, terminal: <Terminal size={18}/>, sweep: <Trash2 size={18}/>, sort: <Droplets size={18}/>, vent: <Wind size={18}/>, dna: <Fingerprint size={18}/>, cooling: <Thermometer size={18}/>, scanner: <Activity size={18}/> }; return icons[task] || <CheckCircle2 size={18}/>; }
 function LifeVessel({ health }) { return <div className="relative w-48 h-80"><div className="absolute inset-0 glass-vessel rounded-[60px] overflow-hidden border-4 border-white/5"><motion.div animate={{ height: `${health}%` }} className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-cyan-600 via-cyan-300 liquid-wave" style={{ transformOrigin: 'bottom' }} /></div><div className="absolute inset-4 border-l-2 border-t-2 border-white/10 rounded-[50px] pointer-events-none" /></div>; }
 function LoadingScreen() { return <div className="h-screen flex flex-col items-center justify-center bg-cyber-black text-white"><Loader2 className="w-12 h-12 text-cyber-accent animate-spin" /><p className="mt-8 font-mono text-[10px] tracking-widest uppercase">Syncing Protocol...</p></div>; }
-function GameOverScreen({ score, onExit }) { return <div className="h-screen flex flex-col items-center justify-center p-8 bg-red-950/40 text-center backdrop-blur-xl z-[300] fixed inset-0"><AlertTriangle size={100} className="text-red-500 mb-8" /><h1 className="text-7xl font-black text-red-500 mb-4 italic tracking-tighter">FAILURE</h1><p className="mb-16 font-mono text-white uppercase tracking-widest">Final Performance Score: {score}</p><button onClick={onExit} className="py-6 px-12 bg-white text-black font-black rounded-3xl uppercase tracking-widest text-xs">Home</button></div>; }
-function WinScreen({ score, onExit }) { return <div className="h-screen flex flex-col items-center justify-center p-8 bg-cyber-accent/20 text-center backdrop-blur-xl z-[300] fixed inset-0"><Trophy size={100} className="text-cyber-accent mb-8" /><h1 className="text-7xl font-black text-cyber-accent mb-4 italic tracking-tighter">STABILIZED</h1><p className="mb-16 font-mono text-white uppercase tracking-widest">Master Score: {score}</p><button onClick={onExit} className="py-6 px-16 bg-cyber-accent text-black font-black rounded-3xl uppercase tracking-widest text-xs">Safe Return</button></div>; }
+
+function GameOverScreen({ score, onExit }) { 
+  return (
+    <div className="h-[100dvh] flex flex-col items-center justify-center p-6 bg-red-950/60 text-center backdrop-blur-xl z-[300] fixed inset-0">
+      <AlertTriangle size={64} className="text-red-500 mb-6 md:size-[100px] md:mb-8" />
+      <h1 className="text-5xl md:text-7xl font-black text-red-500 mb-4 italic tracking-tighter uppercase">FAILURE</h1>
+      <p className="mb-12 md:mb-16 font-mono text-white text-xs md:text-sm uppercase tracking-widest opacity-80">Final Performance Score: <span className="text-white font-black">{score}</span></p>
+      <button onClick={onExit} className="py-5 px-12 bg-white text-black font-black rounded-3xl uppercase tracking-widest text-[10px] active:scale-95 transition-all">Return to Home</button>
+    </div>
+  ); 
+}
+
+function WinScreen({ score, onExit }) { 
+  return (
+    <div className="h-[100dvh] flex flex-col items-center justify-center p-6 bg-cyber-accent/30 text-center backdrop-blur-xl z-[300] fixed inset-0">
+      <Trophy size={64} className="text-cyber-accent mb-6 md:size-[100px] md:mb-8" />
+      <h1 className="text-5xl md:text-7xl font-black text-cyber-accent mb-4 italic tracking-tighter uppercase">STABILIZED</h1>
+      <p className="mb-12 md:mb-16 font-mono text-white text-xs md:text-sm uppercase tracking-widest opacity-80">Master Score: <span className="text-white font-black">{score}</span></p>
+      <button onClick={onExit} className="py-5 px-16 bg-cyber-accent text-black font-black rounded-3xl uppercase tracking-widest text-[10px] active:scale-95 transition-all">Safe Return</button>
+    </div>
+  ); 
+}
 
 function SortTask({ onComplete }) {
   const [items, setItems] = useState(['cyan', 'cyan', 'magenta', 'magenta', 'cyan'].sort(() => 0.5 - Math.random()));
@@ -552,7 +549,15 @@ function ChemistryTask({ onComplete }) {
   const [target] = useState(Math.floor(Math.random()*40)+20);
   const [cur, setCur] = useState(0);
   const add = (v) => { const n=cur+v; if(n===target) onComplete(); if(n>target) setCur(0); else setCur(n); };
-  return <div className="text-center w-full text-pharmacist"><p className="text-[10px] mb-4 uppercase font-black tracking-widest text-white">Synthesis Target: {target}mg</p><div className="text-7xl font-black mb-12 font-mono text-white">{cur}</div><div className="flex gap-4 justify-center">{[3,7,11].map(v=><button key={v} onClick={()=>add(v)} className="w-16 h-16 bg-white/10 border-2 border-pharmacist/40 rounded-3xl text-pharmacist font-black text-xl hover:bg-pharmacist/20">+{v}</button>)}</div></div>;
+  return (
+    <div className="text-center w-full text-pharmacist">
+      <p className="text-[9px] md:text-[10px] mb-4 uppercase font-black tracking-widest text-white">Target: {target}mg</p>
+      <div className="text-5xl md:text-7xl font-black mb-8 md:mb-12 font-mono text-white tracking-tighter">{cur}</div>
+      <div className="flex gap-3 md:gap-4 justify-center">
+        {[3,7,11].map(v=><button key={v} onClick={()=>add(v)} className="w-12 h-12 md:w-16 md:h-16 bg-white/10 border-2 border-pharmacist/40 rounded-2xl text-pharmacist font-black text-lg hover:bg-pharmacist/20">+{v}</button>)}
+      </div>
+    </div>
+  );
 }
 function ReactorTask({ onComplete }) {
   const [vals, setVals] = useState([50, 50, 50]);
@@ -564,9 +569,22 @@ function ReactorTask({ onComplete }) {
 function GenCodeTask({ onComplete, updateDB }) {
   const [code, setCode] = useState('----');
   const gen = () => { const c = Math.floor(1000 + Math.random() * 9000).toString(); setCode(c); updateDB({ sync_code: c }); };
-  return <div className="text-center w-full"><div className="text-7xl font-black font-mono mb-12 text-engineer drop-shadow-[0_0_15px_#22c55e]">{code}</div><div className="flex flex-col gap-4"><button onClick={gen} className="w-full py-5 bg-engineer text-black font-black rounded-2xl shadow-lg hover:scale-105 transition-all">Generate Sync Code</button><button onClick={() => onComplete()} className="w-full py-3 bg-white/5 text-[10px] font-bold text-gray-500 uppercase tracking-widest text-white">Validate</button></div></div>;
+  return (
+    <div className="text-center w-full">
+      <div className="text-5xl md:text-7xl font-black font-mono mb-8 md:mb-12 text-engineer drop-shadow-[0_0_15px_#22c55e]">{code}</div>
+      <div className="flex flex-col gap-4">
+        <button onClick={gen} className="w-full py-5 bg-engineer text-black font-black rounded-2xl shadow-lg hover:scale-105 transition-all text-xs">GENERATE SYNC CODE</button>
+        <button onClick={() => onComplete()} className="w-full py-3 bg-white/5 text-[8px] md:text-[10px] font-bold text-gray-500 uppercase tracking-widest text-white">Validate</button>
+      </div>
+    </div>
+  );
 }
 function TerminalTask({ onComplete }) {
   const [inp, setInp] = useState('');
-  return <div className="text-center w-full text-pharmacist"><p className="text-[10px] mb-6 font-black uppercase text-white">Input Authorization</p><input type="text" maxLength={4} value={inp} onChange={(e) => { setInp(e.target.value); if(e.target.value.length === 4) onComplete(); }} className="w-full bg-white/5 border-2 border-pharmacist/40 rounded-3xl py-6 text-center text-6xl font-black font-mono text-pharmacist outline-none focus:border-pharmacist shadow-[inset_0_0_20px_rgba(236,72,153,0.1)]" placeholder="----" /></div>;
+  return (
+    <div className="text-center w-full text-pharmacist">
+      <p className="text-[10px] mb-6 font-black uppercase text-white">Input Authorization</p>
+      <input type="text" maxLength={4} value={inp} onChange={(e) => { setInp(e.target.value); if(e.target.value.length === 4) onComplete(); }} className="w-full bg-white/5 border-2 border-pharmacist/40 rounded-3xl py-4 md:py-6 text-center text-4xl md:text-6xl font-black font-mono text-pharmacist outline-none focus:border-pharmacist shadow-[inset_0_0_20px_rgba(236,72,153,0.1)]" placeholder="----" />
+    </div>
+  );
 }
