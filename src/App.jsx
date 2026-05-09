@@ -224,12 +224,12 @@ export default function App() {
   if (loading) return <LoadingScreen />;
 
   return (
-    <div className="relative h-screen bg-cyber-black text-white overflow-hidden font-sans select-none">
+    <div className="relative h-[100dvh] bg-cyber-black text-white font-sans select-none overflow-hidden flex flex-col">
       <div className="bg-grid absolute inset-0 z-0 opacity-10" />
       <AnimatePresence mode="wait">
         {appState === 'welcome' && <WelcomeScreen onCreate={createRoom} onJoin={() => setAppState('joining')} leaderboard={leaderboard} />}
         {appState === 'joining' && <JoinScreen onJoin={joinRoom} onBack={() => setAppState('welcome')} />}
-        {appState === 'role-select' && <RoleSelectScreen gameState={gameState} roomId={roomId} onCopy={copyRoomId} onSelect={async (r) => { await updateGameDB({ [r === 'Engineer' ? 'engineer_taken' : 'pharmacist_taken']: true }); setRole(r); setAppState('lobby'); }} />}
+        {appState === 'role-select' && <RoleSelectScreen gameState={gameState} roomId={roomId} onCopy={copyRoomId} onSelect={async (r) => { await updateGameDB({ [r === 'Engineer' ? 'engineer_taken' : 'pharmacist_taken']: true }); setRole(r); setAppState('lobby'); }} onBack={exitGame} />}
         {appState === 'lobby' && <LobbyScreen roomId={roomId} role={role} partnerIn={role === 'Engineer' ? gameState?.pharmacist_taken : gameState?.engineer_taken} countdown={countdown} onCopy={copyRoomId} />}
         {appState === 'playing' && <GamePlayScreen role={role} health={currentHealth} time={currentTime} score={score} afk={partnerAfk} tasks={activeTaskPool} onTaskSelect={setActiveTask} activeTask={activeTask} onComplete={completeTask} onCloseTask={() => setActiveTask(null)} updateDB={updateGameDB} />}
         {appState === 'gameover' && <GameOverScreen score={score} onExit={exitGame} />}
@@ -261,41 +261,35 @@ export default function App() {
 // --- Screens ---
 function WelcomeScreen({ onCreate, onJoin, leaderboard }) {
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="relative z-10 flex flex-col md:flex-row items-center justify-center h-full p-8 text-center md:text-left gap-12 md:gap-24 w-full max-w-5xl mx-auto">
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="relative z-10 flex flex-col md:flex-row items-center justify-center h-full w-full p-6 py-10 md:p-8 text-center md:text-left gap-8 md:gap-24 max-w-5xl mx-auto overflow-y-auto pb-12">
       
       {/* Bagian Kiri: Branding & Tombol */}
-      <div className="flex flex-col items-center md:items-start max-w-sm w-full">
-        <h1 className="text-8xl font-black italic mb-2 tracking-tighter text-white leading-none">VESSEL</h1>
-        <p className="text-[10px] text-gray-500 font-mono tracking-[0.5em] uppercase mb-12">Core Survival Protocol</p>
-        <div className="flex flex-col gap-4 w-full px-8 md:px-0">
-          <button onClick={onCreate} className="py-6 bg-white text-black font-black rounded-3xl hover:scale-105 transition-all shadow-[0_0_30px_rgba(255,255,255,0.2)] uppercase tracking-widest text-xs">
-            NEW MISSION
-          </button>
-          <button onClick={onJoin} className="py-6 bg-white/5 border border-white/10 font-black rounded-3xl hover:bg-white/10 transition-all uppercase tracking-widest text-xs text-white">
-            JOIN LINK
-          </button>
+      <div className="flex flex-col items-center md:items-start max-w-sm w-full mt-auto md:mt-0">
+        <h1 className="text-7xl md:text-8xl font-black italic mb-2 tracking-tighter text-white leading-none">VESSEL</h1>
+        <p className="text-[9px] md:text-[10px] text-gray-500 font-mono tracking-[0.4em] md:tracking-[0.5em] uppercase mb-10 md:mb-12">Core Survival Protocol</p>
+        <div className="flex flex-col gap-4 w-full px-2 md:px-0">
+          <button onClick={onCreate} className="py-5 md:py-6 bg-white text-black font-black rounded-3xl hover:scale-105 transition-all shadow-[0_0_30px_rgba(255,255,255,0.2)] uppercase tracking-widest text-xs">NEW MISSION</button>
+          <button onClick={onJoin} className="py-5 md:py-6 bg-white/5 border border-white/10 font-black rounded-3xl hover:bg-white/10 transition-all uppercase tracking-widest text-xs text-white">JOIN LINK</button>
         </div>
       </div>
 
       {/* Bagian Kanan: Leaderboard */}
-      <div className="w-full max-w-sm bg-white/5 border border-white/10 rounded-[40px] p-10 backdrop-blur-xl">
-        <div className="flex flex-col items-center md:items-start gap-2 mb-8 text-white">
-          <TrendingUp size={24} className="text-cyber-accent mb-2" />
-          <h2 className="text-xs font-black uppercase tracking-[0.4em] text-white">Top Performers</h2>
+      <div className="w-full max-w-sm bg-white/5 border border-white/10 rounded-[30px] md:rounded-[40px] p-6 md:p-10 backdrop-blur-xl mb-auto md:mb-0 mt-4 md:mt-0">
+        <div className="flex flex-col items-center md:items-start gap-2 mb-6 md:mb-8 text-white">
+          <TrendingUp size={20} className="text-cyber-accent mb-1" />
+          <h2 className="text-[10px] md:text-xs font-black uppercase tracking-[0.4em] text-white">Top Performers</h2>
         </div>
-        <div className="flex flex-col gap-5">
+        <div className="flex flex-col gap-4 md:gap-5">
           {leaderboard.length > 0 ? leaderboard.map((item, i) => (
-            <div key={i} className="flex justify-between items-center border-b border-white/5 pb-4">
-              <div className="flex items-center gap-4 text-left">
-                <span className={`text-xs font-black ${i === 0 ? 'text-yellow-500' : 'text-white'}`}>0{i+1}</span>
-                <span className="text-[10px] font-mono text-gray-400 uppercase tracking-widest">Room #{item.room_id}</span>
+            <div key={i} className="flex justify-between items-center border-b border-white/5 pb-3 md:pb-4">
+              <div className="flex items-center gap-3 md:gap-4 text-left">
+                <span className={`text-[10px] md:text-xs font-black ${i === 0 ? 'text-yellow-500' : 'text-white'}`}>0{i+1}</span>
+                <span className="text-[9px] md:text-[10px] font-mono text-gray-400 uppercase tracking-widest">Room #{item.room_id}</span>
               </div>
-              <span className="text-lg font-black italic text-white leading-none">{item.score}</span>
+              <span className="text-base md:text-lg font-black italic text-white leading-none">{item.score}</span>
             </div>
           )) : (
-            <div className="py-10 text-center md:text-left text-gray-600 text-[10px] font-bold uppercase tracking-[0.3em]">
-              No Mission Data
-            </div>
+            <div className="py-8 text-center md:text-left text-gray-600 text-[9px] md:text-[10px] font-bold uppercase tracking-[0.3em]">No Mission Data</div>
           )}
         </div>
       </div>
@@ -305,8 +299,48 @@ function WelcomeScreen({ onCreate, onJoin, leaderboard }) {
 }
 
 function JoinScreen({ onJoin, onBack }) { const [code, setCode] = useState(''); return <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="relative z-10 flex flex-col items-center justify-center h-full p-8 text-center"><h2 className="text-4xl font-black mb-12 italic text-white">ACCESS KEY</h2><input type="text" maxLength={6} value={code} onChange={(e) => setCode(e.target.value)} className="w-64 bg-transparent border-b-4 border-white/20 py-4 text-center text-6xl font-black font-mono focus:border-cyber-accent outline-none mb-12 transition-all text-white" placeholder="000000" /><div className="flex flex-col gap-4 w-64"><button onClick={() => onJoin(code)} className="py-5 bg-cyber-accent text-black font-black rounded-2xl">SYNC</button><button onClick={onBack} className="text-[10px] text-gray-600 font-bold uppercase tracking-widest">Back</button></div></motion.div>; }
-function RoleSelectScreen({ gameState, roomId, onSelect, onCopy }) { const displayId = roomId || gameState?.id || "------"; return <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="relative z-10 flex flex-col items-center justify-center h-full p-8 text-center"><div className="mb-12"><h2 className="text-3xl font-black italic mb-4 tracking-tighter uppercase opacity-50">Authorized Room</h2><button onClick={onCopy} className="group relative inline-block px-10 py-5 bg-white/5 border-2 border-cyber-accent/30 rounded-3xl shadow-[0_0_30px_rgba(34,211,238,0.1)] hover:bg-white/10 transition-all"><div className="text-[10px] font-mono text-cyber-accent tracking-[0.5em] uppercase mb-1 flex items-center justify-center gap-2">Access Key <Copy size={10} /></div><div className="text-6xl font-black font-mono tracking-tighter text-white">{displayId}</div></button></div><h3 className="text-4xl font-black italic mb-10 tracking-tight text-white">SELECT YOUR UNIT</h3><div className="grid md:grid-cols-2 gap-8 w-full max-w-5xl"><RoleCard title="ENGINEER" icon={<Wrench size={40}/>} taken={gameState?.engineer_taken} onClick={() => onSelect('Engineer')} /><RoleCard title="PHARMACIST" icon={<FlaskConical size={40}/>} taken={gameState?.pharmacist_taken} onClick={() => onSelect('Pharmacist')} /></div></motion.div>; }
-function RoleCard({ title, icon, taken, onClick }) { return <button onClick={onClick} disabled={taken} className={`p-10 text-left border-2 rounded-[40px] transition-all relative ${taken ? 'border-red-900 bg-red-950/20 opacity-50 grayscale' : 'border-white/5 bg-white/5 hover:border-white/10'}`}><div className={`mb-6 p-4 rounded-xl w-fit ${taken ? 'bg-red-900/40 text-red-500' : 'bg-white text-black'}`}>{icon}</div><h3 className="text-3xl font-black italic mb-2 tracking-tight text-white">{title}</h3>{taken ? <div className="text-red-500 font-black text-[10px] animate-pulse">LOCKED</div> : <div className="text-cyber-accent font-black text-[10px]">UNIT AVAILABLE →</div>}</button>; }
+function RoleSelectScreen({ gameState, roomId, onSelect, onCopy, onBack }) { 
+  const displayId = roomId || gameState?.id || "------"; 
+  return (
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="relative z-10 flex flex-col items-center justify-start md:justify-center h-full w-full p-6 pt-20 md:p-8 text-center overflow-y-auto">
+      
+      {/* TOMBOL BACK / ABORT */}
+      <button onClick={onBack} className="absolute top-6 left-6 md:top-10 md:left-10 flex items-center gap-2 text-[10px] md:text-xs text-gray-500 font-bold uppercase tracking-widest hover:text-white transition-colors">
+        <X size={16} /> ABORT
+      </button>
+
+      <div className="mb-8 md:mb-12 mt-4 md:mt-0">
+        <h2 className="text-xl md:text-3xl font-black italic mb-3 md:mb-4 tracking-tighter uppercase opacity-50">Authorized Room</h2>
+        <button onClick={onCopy} className="group relative inline-block px-8 py-4 md:px-10 md:py-5 bg-white/5 border-2 border-cyber-accent/30 rounded-3xl shadow-[0_0_30px_rgba(34,211,238,0.1)] hover:bg-white/10 transition-all">
+          <div className="text-[9px] md:text-[10px] font-mono text-cyber-accent tracking-[0.5em] uppercase mb-1 flex items-center justify-center gap-2">Access Key <Copy size={10} /></div>
+          <div className="text-5xl md:text-6xl font-black font-mono tracking-tighter text-white">{displayId}</div>
+        </button>
+      </div>
+      
+      <h3 className="text-2xl md:text-4xl font-black italic mb-6 md:mb-10 tracking-tight text-white">SELECT YOUR UNIT</h3>
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8 w-full max-w-4xl pb-10">
+        <RoleCard title="ENGINEER" icon={<Wrench size={30} />} taken={gameState?.engineer_taken} onClick={() => onSelect('Engineer')} />
+        <RoleCard title="PHARMACIST" icon={<FlaskConical size={30} />} taken={gameState?.pharmacist_taken} onClick={() => onSelect('Pharmacist')} />
+      </div>
+    </motion.div>
+  ); 
+}
+
+function RoleCard({ title, icon, taken, onClick }) { 
+  return (
+    <button onClick={onClick} disabled={taken} className={`p-6 md:p-10 text-left border-2 rounded-[30px] md:rounded-[40px] transition-all relative flex flex-row md:flex-col items-center md:items-start gap-6 md:gap-0 ${taken ? 'border-red-900 bg-red-950/20 opacity-50 grayscale' : 'border-white/5 bg-white/5 hover:border-white/10'}`}>
+      <div className={`shrink-0 md:mb-6 p-4 rounded-xl w-fit ${taken ? 'bg-red-900/40 text-red-500' : 'bg-white text-black'}`}>
+        {icon}
+      </div>
+      <div>
+        <h3 className="text-2xl md:text-3xl font-black italic mb-1 md:mb-2 tracking-tight text-white">{title}</h3>
+        {taken ? <div className="text-red-500 font-black text-[9px] md:text-[10px] animate-pulse">LOCKED</div> : <div className="text-cyber-accent font-black text-[9px] md:text-[10px]">UNIT AVAILABLE →</div>}
+      </div>
+    </button>
+  ); 
+}
+
 function LobbyScreen({ roomId, role, partnerIn, countdown, onCopy }) { return <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="relative z-10 flex flex-col items-center justify-center h-full p-8 text-center"><div className="mb-12"><button onClick={onCopy} className="group flex items-center gap-4 px-8 py-3 bg-white/5 rounded-2xl text-gray-500 font-mono tracking-widest mb-6 border border-white/5 hover:bg-white/10 transition-all"><span className="uppercase text-[10px]">Room ID // </span><span className="text-2xl font-black text-white">{roomId}</span><Copy size={16} className="text-cyber-accent" /></button><h2 className="text-7xl font-black italic uppercase tracking-tighter leading-tight text-white">{role} ACTIVE</h2></div><div className="relative w-80 h-80 flex items-center justify-center border-4 border-white/5 rounded-full shadow-2xl">{partnerIn ? <AnimatePresence mode="wait"><motion.div key={countdown} initial={{ scale: 0.5, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 1.5, opacity: 0 }} className="text-[12rem] font-black italic text-cyber-accent leading-none">{countdown !== null ? (countdown > 0 ? countdown : 'GO') : '...'}</motion.div></AnimatePresence> : <div className="flex flex-col items-center gap-8"><div className="w-16 h-16 border-4 border-white/10 border-t-cyber-accent rounded-full animate-spin" /><p className="text-xs text-white font-black tracking-[0.4em] uppercase">Awaiting Partner</p></div>}</div></motion.div>; }
 
 function GamePlayScreen({ role, health, time, score, afk, tasks, onTaskSelect, activeTask, onComplete, onCloseTask, updateDB }) {
